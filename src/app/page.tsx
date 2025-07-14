@@ -4,6 +4,9 @@ import { addDays, format, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Reservation } from "@/types/reservation";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 
 // Helper to get all days between two dates (inclusive)
 function getDatesBetween(start: string, end: string) {
@@ -24,6 +27,7 @@ export default function Home() {
   const [calendar, setCalendar] = useState<{
     [date: string]: { checkin: Reservation[]; checkout: Reservation[]; staying: Reservation[] };
   }>({});
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -64,64 +68,87 @@ export default function Home() {
     setCalendar(map);
   }, [reservations]);
 
+  // Prepare events for FullCalendar
+  const events = reservations.map((r) => ({
+    title: `${r.guest_name} (Hab. ${r.room_number})`,
+    start: r.entry_date,
+    end: r.checkout_date,
+    allDay: true,
+    id: r.id,
+  }));
+
+  // Filter reservations for selected date
+  let checkin: typeof reservations = [];
+  let staying: typeof reservations = [];
+  let checkout: typeof reservations = [];
+  if (selectedDate) {
+    checkin = reservations.filter((r) => r.entry_date === selectedDate);
+    checkout = reservations.filter((r) => r.checkout_date === selectedDate);
+    staying = reservations.filter(
+      (r) => r.entry_date < selectedDate && r.checkout_date > selectedDate
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto mt-10 p-6 bg-white rounded shadow">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Reservations Calendar</h1>
+        <h1 className="text-2xl font-bold">Calendario de Reservas</h1>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           onClick={() => router.push("/new-reservation")}
         >
-          + New Reservation
+          + Nueva Reserva
         </button>
       </div>
-      {loading && <div>Loading...</div>}
-      {error && <div className="text-red-600">{error}</div>}
-      {!loading && !error && Object.keys(calendar).length === 0 && (
-        <div>No reservations found.</div>
-      )}
-      {!loading && !error && Object.keys(calendar).length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border px-2 py-1">Date</th>
-                <th className="border px-2 py-1">Check-in</th>
-                <th className="border px-2 py-1">Staying</th>
-                <th className="border px-2 py-1">Check-out</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(calendar)
-                .sort()
-                .map((date) => (
-                  <tr key={date}>
-                    <td className="border px-2 py-1 font-semibold">{date}</td>
-                    <td className="border px-2 py-1">
-                      {calendar[date].checkin.map((r) => (
-                        <div key={r.id} className="text-green-700">
-                          {r.guest_name} (Room {r.room_number})
-                        </div>
-                      ))}
-                    </td>
-                    <td className="border px-2 py-1">
-                      {calendar[date].staying.map((r) => (
-                        <div key={r.id} className="text-blue-700">
-                          {r.guest_name} (Room {r.room_number})
-                        </div>
-                      ))}
-                    </td>
-                    <td className="border px-2 py-1">
-                      {calendar[date].checkout.map((r) => (
-                        <div key={r.id} className="text-red-700">
-                          {r.guest_name} (Room {r.room_number})
-                        </div>
-                      ))}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+      <FullCalendar
+        plugins={[dayGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        locale="es"
+        events={events}
+        dateClick={(info) => setSelectedDate(info.dateStr)}
+        height="auto"
+      />
+      {selectedDate && (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-2">
+            Reservas para {selectedDate}
+          </h2>
+          <div className="mb-2">
+            <span className="font-bold">Check-in:</span>
+            {checkin.length === 0 ? (
+              <span className="ml-2 text-gray-500">Ninguna</span>
+            ) : (
+              checkin.map((r) => (
+                <div key={r.id} className="text-green-700">
+                  {r.guest_name} (Hab. {r.room_number})
+                </div>
+              ))
+            )}
+          </div>
+          <div className="mb-2">
+            <span className="font-bold">Estadía:</span>
+            {staying.length === 0 ? (
+              <span className="ml-2 text-gray-500">Ninguna</span>
+            ) : (
+              staying.map((r) => (
+                <div key={r.id} className="text-blue-700">
+                  {r.guest_name} (Hab. {r.room_number})
+                </div>
+              ))
+            )}
+          </div>
+          <div className="mb-2">
+            <span className="font-bold">Check-out:</span>
+            {checkout.length === 0 ? (
+              <span className="ml-2 text-gray-500">Ninguna</span>
+            ) : (
+              checkout.map((r) => (
+                <div key={r.id} className="text-red-700">
+                  {r.guest_name} (Hab. {r.room_number})
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>
