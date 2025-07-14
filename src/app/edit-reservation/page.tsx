@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function EditReservationPage() {
+function EditReservationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
@@ -220,5 +220,13 @@ export default function EditReservationPage() {
         {error && <div className="text-red-600">{error}</div>}
       </form>
     </div>
+  );
+}
+
+export default function EditReservationPageWrapper() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <EditReservationPage />
+    </Suspense>
   );
 }
