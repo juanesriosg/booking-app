@@ -1,11 +1,11 @@
 export interface Reservation {
   id: string;
-  guestName: string;
-  entryDate: string; // ISO date string
-  checkoutDate: string; // ISO date string
-  creationDate: string; // ISO date string
-  roomNumber: string;
+  guest_name: string;
+  entry_date: string; // ISO date string
+  checkout_date: string; // ISO date string
+  creation_date: string; // ISO date string
+  room_number: string;
   price: number;
-  guestPhone: string;
-  guestCount: number;
+  guest_phone: string;
+  guest_count: number;
 }

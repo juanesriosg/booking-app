@@ -19,8 +19,12 @@ export default function Home() {
         if (!res.ok) throw new Error("Failed to fetch reservations");
         const data = await res.json();
         setReservations(data);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Unknown error");
+        }
       } finally {
         setLoading(false);
       }
@@ -61,15 +65,15 @@ export default function Home() {
           <tbody>
             {reservations.map((r) => (
               <tr key={r.id}>
-                <td className="border px-2 py-1">{r.guestName}</td>
-                <td className="border px-2 py-1">{r.roomNumber}</td>
-                <td className="border px-2 py-1">{r.entryDate}</td>
-                <td className="border px-2 py-1">{r.checkoutDate}</td>
-                <td className="border px-2 py-1">{r.guestCount}</td>
-                <td className="border px-2 py-1">{r.guestPhone}</td>
+                <td className="border px-2 py-1">{r.guest_name}</td>
+                <td className="border px-2 py-1">{r.room_number}</td>
+                <td className="border px-2 py-1">{r.entry_date}</td>
+                <td className="border px-2 py-1">{r.checkout_date}</td>
+                <td className="border px-2 py-1">{r.guest_count}</td>
+                <td className="border px-2 py-1">{r.guest_phone}</td>
                 <td className="border px-2 py-1">${r.price.toFixed(2)}</td>
                 <td className="border px-2 py-1">
-                  {new Date(r.creationDate).toLocaleString()}
+                  {new Date(r.creation_date).toLocaleString()}
                 </td>
               </tr>
             ))}

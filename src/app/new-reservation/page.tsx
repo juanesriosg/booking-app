@@ -4,13 +4,13 @@ import { useState } from "react";
 
 export default function NewReservationPage() {
   const [form, setForm] = useState({
-    guestName: "",
-    entryDate: "",
-    checkoutDate: "",
-    roomNumber: "",
+    guest_name: "",
+    entry_date: "",
+    checkout_date: "",
+    room_number: "",
     price: "",
-    guestPhone: "",
-    guestCount: "",
+    guest_phone: "",
+    guest_count: "",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
@@ -30,28 +30,32 @@ export default function NewReservationPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          guestName: form.guestName,
-          entryDate: form.entryDate,
-          checkoutDate: form.checkoutDate,
-          roomNumber: form.roomNumber,
+          guest_name: form.guest_name,
+          entry_date: form.entry_date,
+          checkout_date: form.checkout_date,
+          room_number: form.room_number,
           price: Number(form.price),
-          guestPhone: form.guestPhone,
-          guestCount: Number(form.guestCount),
+          guest_phone: form.guest_phone,
+          guest_count: Number(form.guest_count),
         }),
       });
       if (!res.ok) throw new Error("Error creating reservation");
       setSuccess("Reservation created!");
       setForm({
-        guestName: "",
-        entryDate: "",
-        checkoutDate: "",
-        roomNumber: "",
+        guest_name: "",
+        entry_date: "",
+        checkout_date: "",
+        room_number: "",
         price: "",
-        guestPhone: "",
-        guestCount: "",
+        guest_phone: "",
+        guest_count: "",
       });
-    } catch (err: any) {
-      setError(err.message || "Unknown error");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Unknown error");
+      }
     } finally {
       setLoading(false);
     }
@@ -59,38 +63,47 @@ export default function NewReservationPage() {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Create Reservation</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Create Reservation</h1>
+        <button
+          type="button"
+          className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+          onClick={() => window.location.href = "/"}
+        >
+          ← Back
+        </button>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
-          name="guestName"
+          name="guest_name"
           placeholder="Guest Name"
-          value={form.guestName}
+          value={form.guest_name}
           onChange={handleChange}
           required
           className="w-full border px-3 py-2 rounded"
         />
         <input
-          name="entryDate"
+          name="entry_date"
           type="date"
           placeholder="Entry Date"
-          value={form.entryDate}
+          value={form.entry_date}
           onChange={handleChange}
           required
           className="w-full border px-3 py-2 rounded"
         />
         <input
-          name="checkoutDate"
+          name="checkout_date"
           type="date"
           placeholder="Checkout Date"
-          value={form.checkoutDate}
+          value={form.checkout_date}
           onChange={handleChange}
           required
           className="w-full border px-3 py-2 rounded"
         />
         <input
-          name="roomNumber"
+          name="room_number"
           placeholder="Room Number"
-          value={form.roomNumber}
+          value={form.room_number}
           onChange={handleChange}
           required
           className="w-full border px-3 py-2 rounded"
@@ -107,18 +120,18 @@ export default function NewReservationPage() {
           className="w-full border px-3 py-2 rounded"
         />
         <input
-          name="guestPhone"
+          name="guest_phone"
           placeholder="Guest Phone"
-          value={form.guestPhone}
+          value={form.guest_phone}
           onChange={handleChange}
           required
           className="w-full border px-3 py-2 rounded"
         />
         <input
-          name="guestCount"
+          name="guest_count"
           type="number"
           placeholder="Number of Guests"
-          value={form.guestCount}
+          value={form.guest_count}
           onChange={handleChange}
           required
           min="1"

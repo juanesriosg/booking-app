@@ -27,13 +27,13 @@ export async function POST(req: NextRequest) {
     .from('reservations')
     .insert([
       {
-        guest_name: reservation.guestName,
-        entry_date: reservation.entryDate,
-        checkout_date: reservation.checkoutDate,
-        room_number: reservation.roomNumber,
+        guest_name: reservation.guest_name,
+        entry_date: reservation.entry_date,
+        checkout_date: reservation.checkout_date,
+        room_number: reservation.room_number,
         price: reservation.price,
-        guest_phone: reservation.guestPhone,
-        guest_count: reservation.guestCount,
+        guest_phone: reservation.guest_phone,
+        guest_count: reservation.guest_count,
       },
     ])
     .select();
