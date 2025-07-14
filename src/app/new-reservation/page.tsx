@@ -22,9 +22,13 @@ export default function NewReservationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setSuccess("");
     setError("");
+    if (form.entry_date >= form.checkout_date) {
+      setError("La fecha de entrada debe ser anterior a la fecha de salida.");
+      return;
+    }
+    setLoading(true);
     try {
       const res = await fetch("/api/reservations", {
         method: "POST",
@@ -39,8 +43,8 @@ export default function NewReservationPage() {
           guest_count: Number(form.guest_count),
         }),
       });
-      if (!res.ok) throw new Error("Error creating reservation");
-      setSuccess("Reservation created!");
+      if (!res.ok) throw new Error("Error al crear la reserva");
+      setSuccess("¡Reserva creada!");
       setForm({
         guest_name: "",
         entry_date: "",
@@ -54,7 +58,7 @@ export default function NewReservationPage() {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Unknown error");
+        setError("Error desconocido");
       }
     } finally {
       setLoading(false);
@@ -64,13 +68,13 @@ export default function NewReservationPage() {
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Create Reservation</h1>
+        <h1 className="text-2xl font-bold">Crear Reserva</h1>
         <button
           type="button"
           className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
           onClick={() => window.location.href = "/"}
         >
-          ← Back
+          ← Volver
         </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,24 +86,26 @@ export default function NewReservationPage() {
           required
           className="w-full border px-3 py-2 rounded"
         />
-        <input
-          name="entry_date"
-          type="date"
-          placeholder="Entry Date"
-          value={form.entry_date}
-          onChange={handleChange}
-          required
-          className="w-full border px-3 py-2 rounded"
-        />
-        <input
-          name="checkout_date"
-          type="date"
-          placeholder="Checkout Date"
-          value={form.checkout_date}
-          onChange={handleChange}
-          required
-          className="w-full border px-3 py-2 rounded"
-        />
+        <div className="flex gap-2">
+          <input
+            name="entryDate"
+            type="date"
+            placeholder="Fecha de entrada"
+            value={form.entry_date}
+            onChange={handleChange}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
+          <input
+            name="checkoutDate"
+            type="date"
+            placeholder="Fecha de salida"
+            value={form.checkout_date}
+            onChange={handleChange}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
+        </div>
         <input
           name="room_number"
           placeholder="Room Number"
@@ -111,7 +117,7 @@ export default function NewReservationPage() {
         <input
           name="price"
           type="number"
-          placeholder="Price"
+          placeholder="Precio"
           value={form.price}
           onChange={handleChange}
           required
@@ -142,7 +148,7 @@ export default function NewReservationPage() {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? "Saving..." : "Create Reservation"}
+          {loading ? "Guardando..." : "Crear Reserva"}
         </button>
         {success && <div className="text-green-600">{success}</div>}
         {error && <div className="text-red-600">{error}</div>}
