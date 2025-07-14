@@ -80,35 +80,41 @@ export default function NewReservationPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           name="guest_name"
-          placeholder="Guest Name"
+          placeholder="Nombre del huésped"
           value={form.guest_name}
           onChange={handleChange}
           required
           className="w-full border px-3 py-2 rounded"
         />
         <div className="flex gap-2">
-          <input
-            name="entryDate"
-            type="date"
-            placeholder="Fecha de entrada"
-            value={form.entry_date}
-            onChange={handleChange}
-            required
-            className="w-full border px-3 py-2 rounded"
-          />
-          <input
-            name="checkoutDate"
-            type="date"
-            placeholder="Fecha de salida"
-            value={form.checkout_date}
-            onChange={handleChange}
-            required
-            className="w-full border px-3 py-2 rounded"
-          />
+          <div className="flex flex-col w-full">
+            <label htmlFor="entry_date" className="mb-1 text-sm text-gray-700">Fecha de entrada</label>
+            <input
+              id="entry_date"
+              name="entry_date"
+              type="date"
+              value={form.entry_date}
+              onChange={handleChange}
+              required
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
+          <div className="flex flex-col w-full">
+            <label htmlFor="checkout_date" className="mb-1 text-sm text-gray-700">Fecha de salida</label>
+            <input
+              id="checkout_date"
+              name="checkout_date"
+              type="date"
+              value={form.checkout_date}
+              onChange={handleChange}
+              required
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
         </div>
         <input
           name="room_number"
-          placeholder="Room Number"
+          placeholder="Número de habitación"
           value={form.room_number}
           onChange={handleChange}
           required
@@ -127,7 +133,7 @@ export default function NewReservationPage() {
         />
         <input
           name="guest_phone"
-          placeholder="Guest Phone"
+          placeholder="Teléfono del huésped"
           value={form.guest_phone}
           onChange={handleChange}
           required
@@ -136,7 +142,7 @@ export default function NewReservationPage() {
         <input
           name="guest_count"
           type="number"
-          placeholder="Number of Guests"
+          placeholder="Número de huéspedes"
           value={form.guest_count}
           onChange={handleChange}
           required
