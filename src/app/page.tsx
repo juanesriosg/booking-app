@@ -1,72 +1,35 @@
 "use client";
 
 import { addDays, format, parseISO } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Reservation } from "@/types/reservation";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
+import interactionPlugin from "@fullcalendar/interaction";
 
 // Helper to get all days between two dates (inclusive)
-function getDatesBetween(start: string, end: string) {
-  const dates: string[] = [];
-  let current = parseISO(start);
-  const last = parseISO(end);
-  while (current <= last) {
-    dates.push(format(current, "yyyy-MM-dd"));
-    current = addDays(current, 1);
-  }
-  return dates;
-}
 
 export default function Home() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [calendar, setCalendar] = useState<{
-    [date: string]: { checkin: Reservation[]; checkout: Reservation[]; staying: Reservation[] };
-  }>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const detailsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     const fetchReservations = async () => {
-      setLoading(true);
-      setError("");
       try {
         const res = await fetch("/api/reservations");
         if (!res.ok) throw new Error("Failed to fetch reservations");
         const data = await res.json();
         setReservations(data);
       } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Unknown error");
-        }
-      } finally {
-        setLoading(false);
+        // Optionally handle error
       }
     };
     fetchReservations();
   }, []);
-
-  // Calendar logic
-  useEffect(() => {
-    if (!reservations.length) return;
-    const map: { [date: string]: { checkin: Reservation[]; checkout: Reservation[]; staying: Reservation[] } } = {};
-    reservations.forEach((r) => {
-      const days = getDatesBetween(r.entry_date, r.checkout_date);
-      days.forEach((day) => {
-        if (!map[day]) map[day] = { checkin: [], checkout: [], staying: [] };
-        if (day === r.entry_date) map[day].checkin.push(r);
-        if (day === r.checkout_date) map[day].checkout.push(r);
-        if (day !== r.entry_date && day !== r.checkout_date) map[day].staying.push(r);
-      });
-    });
-    setCalendar(map);
-  }, [reservations]);
 
   // Prepare events for FullCalendar
   const events = reservations.map((r) => ({
@@ -75,6 +38,7 @@ export default function Home() {
     end: r.checkout_date,
     allDay: true,
     id: r.id,
+    extendedProps: r,
   }));
 
   // Filter reservations for selected date
@@ -106,6 +70,11 @@ export default function Home() {
         locale="es"
         events={events}
         dateClick={(info) => setSelectedDate(info.dateStr)}
+        eventClick={(info) => {
+          const reservation = reservations.find(r => r.id === info.event.id);
+          setSelectedReservation(reservation || null);
+          setTimeout(() => detailsRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        }}
         height="auto"
       />
       {selectedDate && (
@@ -149,6 +118,25 @@ export default function Home() {
               ))
             )}
           </div>
+        </div>
+      )}
+      {selectedReservation && (
+        <div ref={detailsRef} className="mt-8 p-4 border rounded bg-gray-50">
+          <h2 className="text-xl font-bold mb-2">Detalles de la Reserva</h2>
+          <div><b>Nombre:</b> {selectedReservation.guest_name}</div>
+          <div><b>Habitación:</b> {selectedReservation.room_number}</div>
+          <div><b>Check-in:</b> {selectedReservation.entry_date}</div>
+          <div><b>Check-out:</b> {selectedReservation.checkout_date}</div>
+          <div><b>Teléfono:</b> {selectedReservation.guest_phone}</div>
+          <div><b>Huéspedes:</b> {selectedReservation.guest_count}</div>
+          <div><b>Precio:</b> ${selectedReservation.price}</div>
+          <div><b>Creada:</b> {selectedReservation.creation_date ? new Date(selectedReservation.creation_date).toLocaleString() : ''}</div>
+          <button
+            className="mt-4 bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+            onClick={() => setSelectedReservation(null)}
+          >
+            Cerrar
+          </button>
         </div>
       )}
     </div>
