@@ -6,6 +6,8 @@ export interface Reservation {
   creation_date: string; // ISO date string
   room_number: string;
   price: number;
+  deposit: number;
+  booking_method: string;
   guest_phone: string;
   guest_count: number;
 }

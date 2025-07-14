@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
         checkout_date: reservation.checkout_date,
         room_number: reservation.room_number,
         price: reservation.price,
+        deposit: reservation.deposit,
+        booking_method: reservation.booking_method,
         guest_phone: reservation.guest_phone,
         guest_count: reservation.guest_count,
       },
@@ -42,4 +44,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   return NextResponse.json(data[0], { status: 201 });
+}
+
+export async function PUT(req: NextRequest) {
+  const body = await req.json();
+  const { id, ...updateFields } = body;
+  if (!id) {
+    return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+  }
+  const { data, error } = await supabase
+    .from('reservations')
+    .update(updateFields)
+    .eq('id', id)
+    .select();
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json(data[0], { status: 200 });
 }

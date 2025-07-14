@@ -1,24 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function NewReservationPage() {
+export default function EditReservationPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   const [form, setForm] = useState({
     guest_name: "",
     entry_date: "",
     checkout_date: "",
     room_number: "",
     price: "",
-    deposit: "",
     guest_phone: "",
     guest_count: "",
-    booking_method: "",
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  useEffect(() => {
+    if (!id) return;
+    const fetchReservation = async () => {
+      const res = await fetch(`/api/reservations`);
+      const data = await res.json();
+      const reservation = data.find((r: any) => r.id === id);
+      if (reservation) {
+        setForm({
+          guest_name: reservation.guest_name || "",
+          entry_date: reservation.entry_date || "",
+          checkout_date: reservation.checkout_date || "",
+          room_number: reservation.room_number || "",
+          price: reservation.price?.toString() || "",
+          guest_phone: reservation.guest_phone || "",
+          guest_count: reservation.guest_count?.toString() || "",
+        });
+      }
+    };
+    fetchReservation();
+  }, [id]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -33,39 +56,14 @@ export default function NewReservationPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/reservations", {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          guest_name: form.guest_name,
-          entry_date: form.entry_date,
-          checkout_date: form.checkout_date,
-          room_number: form.room_number,
-          price: Number(form.price),
-          deposit: Number(form.deposit),
-          guest_phone: form.guest_phone,
-          guest_count: Number(form.guest_count),
-          booking_method: form.booking_method,
-        }),
+        body: JSON.stringify({ id, ...form, price: Number(form.price), guest_count: Number(form.guest_count) }),
       });
-      if (!res.ok) throw new Error("Error al crear la reserva");
-      setSuccess("¡Reserva creada!");
-      setForm({
-        guest_name: "",
-        entry_date: "",
-        checkout_date: "",
-        room_number: "",
-        price: "",
-        deposit: "",
-        guest_phone: "",
-        guest_count: "",
-        booking_method: "",
-      });
+      if (!res.ok) throw new Error("Error al actualizar la reserva");
+      setSuccess("¡Reserva actualizada!");
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Error desconocido");
-      }
+      setError((err as Error).message || "Error desconocido");
     } finally {
       setLoading(false);
     }
@@ -74,11 +72,11 @@ export default function NewReservationPage() {
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded shadow">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Crear Reserva</h1>
+        <h1 className="text-2xl font-bold">Editar Reserva</h1>
         <button
           type="button"
           className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-          onClick={() => window.location.href = "/"}
+          onClick={() => router.push("/")}
         >
           ← Volver
         </button>
@@ -138,34 +136,6 @@ export default function NewReservationPage() {
           className="w-full border px-3 py-2 rounded"
         />
         <input
-          name="deposit"
-          type="number"
-          placeholder="Abono"
-          value={form.deposit}
-          onChange={handleChange}
-          min="0"
-          step="0.01"
-          className="w-full border px-3 py-2 rounded"
-        />
-        <div className="flex flex-col w-full">
-          <label htmlFor="booking_method" className="mb-1 text-sm text-gray-700">Vía de reserva</label>
-          <select
-            id="booking_method"
-            name="booking_method"
-            value={form.booking_method}
-            onChange={handleChange}
-            required
-            className="w-full border px-3 py-2 rounded"
-          >
-            <option value="">Seleccione una opción</option>
-            <option value="booking">Booking</option>
-            <option value="reserva en hotel">Reserva en hotel</option>
-            <option value="whatsapp">Whatsapp</option>
-            <option value="llamada">Llamada</option>
-            <option value="otro">Otro</option>
-          </select>
-        </div>
-        <input
           name="guest_phone"
           placeholder="Teléfono del huésped"
           value={form.guest_phone}
@@ -188,7 +158,7 @@ export default function NewReservationPage() {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? "Guardando..." : "Crear Reserva"}
+          {loading ? "Guardando..." : "Actualizar Reserva"}
         </button>
         {success && <div className="text-green-600">{success}</div>}
         {error && <div className="text-red-600">{error}</div>}

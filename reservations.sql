@@ -9,6 +9,8 @@ CREATE TABLE reservations (
     creation_date TIMESTAMP WITH TIME ZONE DEFAULT now(),
     room_number TEXT NOT NULL,
     price NUMERIC(10,2) NOT NULL,
+    deposit NUMERIC(10,2) DEFAULT 0,
+    booking_method TEXT DEFAULT '',
     guest_phone TEXT NOT NULL,
     guest_count INTEGER NOT NULL
 );
