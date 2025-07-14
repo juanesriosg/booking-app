@@ -1,13 +1,29 @@
 "use client";
 
+import { addDays, format, isWithinInterval, parseISO } from "date-fns";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Reservation } from "@/types/reservation";
+
+// Helper to get all days between two dates (inclusive)
+function getDatesBetween(start: string, end: string) {
+  const dates: string[] = [];
+  let current = parseISO(start);
+  const last = parseISO(end);
+  while (current <= last) {
+    dates.push(format(current, "yyyy-MM-dd"));
+    current = addDays(current, 1);
+  }
+  return dates;
+}
 
 export default function Home() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [calendar, setCalendar] = useState<{
+    [date: string]: { checkin: Reservation[]; checkout: Reservation[]; staying: Reservation[] };
+  }>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -32,10 +48,26 @@ export default function Home() {
     fetchReservations();
   }, []);
 
+  // Calendar logic
+  useEffect(() => {
+    if (!reservations.length) return;
+    const map: { [date: string]: { checkin: Reservation[]; checkout: Reservation[]; staying: Reservation[] } } = {};
+    reservations.forEach((r) => {
+      const days = getDatesBetween(r.entry_date, r.checkout_date);
+      days.forEach((day) => {
+        if (!map[day]) map[day] = { checkin: [], checkout: [], staying: [] };
+        if (day === r.entry_date) map[day].checkin.push(r);
+        if (day === r.checkout_date) map[day].checkout.push(r);
+        if (day !== r.entry_date && day !== r.checkout_date) map[day].staying.push(r);
+      });
+    });
+    setCalendar(map);
+  }, [reservations]);
+
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded shadow">
+    <div className="max-w-5xl mx-auto mt-10 p-6 bg-white rounded shadow">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">All Reservations</h1>
+        <h1 className="text-2xl font-bold">Reservations Calendar</h1>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           onClick={() => router.push("/new-reservation")}
@@ -45,40 +77,52 @@ export default function Home() {
       </div>
       {loading && <div>Loading...</div>}
       {error && <div className="text-red-600">{error}</div>}
-      {!loading && !error && reservations.length === 0 && (
+      {!loading && !error && Object.keys(calendar).length === 0 && (
         <div>No reservations found.</div>
       )}
-      {!loading && !error && reservations.length > 0 && (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border px-2 py-1">Guest</th>
-              <th className="border px-2 py-1">Room</th>
-              <th className="border px-2 py-1">Entry</th>
-              <th className="border px-2 py-1">Checkout</th>
-              <th className="border px-2 py-1">Guests</th>
-              <th className="border px-2 py-1">Phone</th>
-              <th className="border px-2 py-1">Price</th>
-              <th className="border px-2 py-1">Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reservations.map((r) => (
-              <tr key={r.id}>
-                <td className="border px-2 py-1">{r.guest_name}</td>
-                <td className="border px-2 py-1">{r.room_number}</td>
-                <td className="border px-2 py-1">{r.entry_date}</td>
-                <td className="border px-2 py-1">{r.checkout_date}</td>
-                <td className="border px-2 py-1">{r.guest_count}</td>
-                <td className="border px-2 py-1">{r.guest_phone}</td>
-                <td className="border px-2 py-1">${r.price.toFixed(2)}</td>
-                <td className="border px-2 py-1">
-                  {new Date(r.creation_date).toLocaleString()}
-                </td>
+      {!loading && !error && Object.keys(calendar).length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border px-2 py-1">Date</th>
+                <th className="border px-2 py-1">Check-in</th>
+                <th className="border px-2 py-1">Staying</th>
+                <th className="border px-2 py-1">Check-out</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {Object.keys(calendar)
+                .sort()
+                .map((date) => (
+                  <tr key={date}>
+                    <td className="border px-2 py-1 font-semibold">{date}</td>
+                    <td className="border px-2 py-1">
+                      {calendar[date].checkin.map((r) => (
+                        <div key={r.id} className="text-green-700">
+                          {r.guest_name} (Room {r.room_number})
+                        </div>
+                      ))}
+                    </td>
+                    <td className="border px-2 py-1">
+                      {calendar[date].staying.map((r) => (
+                        <div key={r.id} className="text-blue-700">
+                          {r.guest_name} (Room {r.room_number})
+                        </div>
+                      ))}
+                    </td>
+                    <td className="border px-2 py-1">
+                      {calendar[date].checkout.map((r) => (
+                        <div key={r.id} className="text-red-700">
+                          {r.guest_name} (Room {r.room_number})
+                        </div>
+                      ))}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
