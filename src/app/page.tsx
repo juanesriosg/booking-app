@@ -1,6 +1,32 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { Reservation } from "@/types/reservation";
 
 export default function Home() {
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchReservations = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await fetch("/api/reservations");
+        if (!res.ok) throw new Error("Failed to fetch reservations");
+        const data = await res.json();
+        setReservations(data);
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReservations();
+  }, []);
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
@@ -98,6 +124,46 @@ export default function Home() {
           Go to nextjs.org →
         </a>
       </footer>
+      <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded shadow">
+        <h1 className="text-2xl font-bold mb-4">All Reservations</h1>
+        {loading && <div>Loading...</div>}
+        {error && <div className="text-red-600">{error}</div>}
+        {!loading && !error && reservations.length === 0 && (
+          <div>No reservations found.</div>
+        )}
+        {!loading && !error && reservations.length > 0 && (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border px-2 py-1">Guest</th>
+                <th className="border px-2 py-1">Room</th>
+                <th className="border px-2 py-1">Entry</th>
+                <th className="border px-2 py-1">Checkout</th>
+                <th className="border px-2 py-1">Guests</th>
+                <th className="border px-2 py-1">Phone</th>
+                <th className="border px-2 py-1">Price</th>
+                <th className="border px-2 py-1">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reservations.map((r) => (
+                <tr key={r.id}>
+                  <td className="border px-2 py-1">{r.guestName}</td>
+                  <td className="border px-2 py-1">{r.roomNumber}</td>
+                  <td className="border px-2 py-1">{r.entryDate}</td>
+                  <td className="border px-2 py-1">{r.checkoutDate}</td>
+                  <td className="border px-2 py-1">{r.guestCount}</td>
+                  <td className="border px-2 py-1">{r.guestPhone}</td>
+                  <td className="border px-2 py-1">${r.price.toFixed(2)}</td>
+                  <td className="border px-2 py-1">
+                    {new Date(r.creationDate).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
