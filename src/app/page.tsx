@@ -23,7 +23,7 @@ export default function Home() {
         if (!res.ok) throw new Error("Failed to fetch reservations");
         const data = await res.json();
         setReservations(data);
-      } catch (err) {
+      } catch {
         // Optionally handle error
       }
     };
