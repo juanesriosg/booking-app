@@ -130,6 +130,8 @@ export default function Home() {
           <div><b>Huéspedes:</b> {selectedReservation.guest_count}</div>
           <div><b>Precio:</b> ${selectedReservation.price}</div>
           <div><b>Creada:</b> {selectedReservation.creation_date ? new Date(selectedReservation.creation_date).toLocaleString() : ''}</div>
+          <div><b>Abono:</b> ${selectedReservation.deposit}</div>
+          <div><b>Vía de reserva:</b> {selectedReservation.booking_method}</div>
           <div className="flex gap-2 mt-4">
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
