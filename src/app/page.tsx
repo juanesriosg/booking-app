@@ -140,6 +140,28 @@ export default function Home() {
               Editar
             </button>
             <button
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              onClick={async () => {
+                if (confirm('¿Estás seguro de que deseas eliminar esta reserva?')) {
+                  const res = await fetch('/api/reservations', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: selectedReservation.id }),
+                  });
+                  if (res.ok) {
+                    setSelectedReservation(null);
+                    // Refresh reservations list
+                    const updated = reservations.filter(r => r.id !== selectedReservation.id);
+                    setReservations(updated);
+                  } else {
+                    alert('Error al eliminar la reserva');
+                  }
+                }
+              }}
+            >
+              Eliminar
+            </button>
+            <button
               className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
               onClick={() => setSelectedReservation(null)}
             >
